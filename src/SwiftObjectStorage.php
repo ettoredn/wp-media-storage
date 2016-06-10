@@ -111,7 +111,7 @@ class SwiftObjectStorage implements ObjectStorage
             throw new \RuntimeException(sprintf('Unable to open the tar archive we just created??'));
 
         if ( defined( 'WP_CLI' ) && WP_CLI )
-            WP_CLI::line(sprintf('Uploading archive %s', $archive));
+            WP_CLI::line(sprintf('Store: uploading files in archive %s', $archive));
 
         $data = [
             'extract-archive' => 'tar',

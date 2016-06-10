@@ -73,19 +73,23 @@ class Media_Storage_Command extends WP_CLI_Command
             /** @var SplFileInfo $file */
             $localMedia[$file->getRelativePathname()] = $file;
 
-        WP_CLI::line(sprintf('Listing objects on the object store, this might take a while...'));
+        WP_CLI::line(sprintf('Local: %d objects found', count($localMedia)));
+
+        WP_CLI::debug(sprintf('Listing objects on the object store, this might take a while...'));
         $storeObjects = $this->storage->listObjects();
+
+        WP_CLI::line(sprintf('Store: %d objects found', count($storeObjects)));
 
         // Do not overwrite existing media by default as the store should be the master version
         $toUpload = array_diff_key($localMedia, $storeObjects);
 
         if (count($toUpload) > 0) {
-            WP_CLI::line(sprintf('%d local media files not present in the object store, uploading...', count($toUpload)));
+            WP_CLI::line(sprintf('%d local media files not present in the store, uploading...', count($toUpload)));
             if (!$dry)
                 $this->storage->storeObjects($toUpload);
         }
         else
-            WP_CLI::line(sprintf('All local media files are present in the store'));
+            WP_CLI::line(sprintf('No local local media file missing from the store'));
 
 
         WP_CLI::success(sprintf('Uploaded %d files to the object store', count($toUpload)));
