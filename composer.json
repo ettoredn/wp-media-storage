@@ -1,0 +1,20 @@
+{
+    "name": "ettoredn/media-cloud",
+    "description": "Offload media to cloud object storages",
+    "require": {
+        "php-opencloud/openstack": "^2.0",
+        "monolog/monolog": "^1.19"
+    },
+    "license": "ISC",
+    "authors": [
+        {
+            "name": "Ettore Del Negro",
+            "email": "ettore@ettoredelnegro.me"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "WPMediaCloud\\": "src/"
+        }
+    }
+}
