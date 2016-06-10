@@ -82,7 +82,7 @@ class Media_Storage_Command extends WP_CLI_Command
         if (count($toUpload) > 0) {
             WP_CLI::line(sprintf('%d local media files not present in the object store, uploading...', count($toUpload)));
             if (!$dry)
-                $this->storage->storeObjects($localMedia);
+                $this->storage->storeObjects($toUpload);
         }
         else
             WP_CLI::line(sprintf('All local media files are present in the store'));

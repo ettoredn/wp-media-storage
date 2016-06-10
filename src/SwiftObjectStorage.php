@@ -72,17 +72,39 @@ class SwiftObjectStorage implements ObjectStorage
      */
     function storeObjects(array $files)
     {
-        $archive = new \PharData('/tmp/buld-extract.tar');
+        // Use wp_get_uploads_dir()
+        $count = 0;
+
+        $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
+        $archive = new \PharData($archivePathname);
+        $size = 0;
         foreach ($files as $objectName => $spl) {
             /** @var \SplFileInfo $spl */
             if (!($spl instanceof \SplFileInfo))
                 throw new \RuntimeException('Expecting an instance of \SplFileInfo');
             
             $archive->addFile($spl->getPathname(), $objectName);
-        }
+            $size += $spl->getSize();
 
+            if ($size > 1*1024*1024*1024) {
+//            if ($size > 500*1024) {
+                $this->storeArchive($archivePathname);
+
+                $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
+                $archive = new \PharData($archivePathname);
+                $size = 0;
+            }
+        }
         
-        if (!($handle = fopen('/tmp/buld-extract.tar', 'r')))
+        $this->storeArchive($archivePathname);
+    }
+
+    /**
+     * @param \SplFileInfo|string $archive
+     */
+    protected function storeArchive(string $archive)
+    {
+        if (!($handle = fopen($archive, 'r')))
             throw new \RuntimeException(sprintf('Unable to open the tar archive we just created??'));
 
         $data = [
@@ -91,7 +113,7 @@ class SwiftObjectStorage implements ObjectStorage
             'containerName' => $this->container->name
         ];
         $this->container->model(Archive::class)->upload($data);
-        
+
         fclose($handle);
     }
 
