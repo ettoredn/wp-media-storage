@@ -188,7 +188,7 @@ class SwiftObjectStorage implements ObjectStorage
 //        'delimiter' => $this->params->delimiter(),
 //        'newest'    => $this->params->newest(),
 
-        $hasLimit = intval($config['limit']) > 0;
+        $hasLimit = array_key_exists('limit', $config) && intval($config['limit']) > 0;
         $options = [];
 
         if (array_key_exists('limit', $config) && intval($config['limit']) > 0)
