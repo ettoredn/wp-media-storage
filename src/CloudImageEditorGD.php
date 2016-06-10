@@ -5,7 +5,9 @@ namespace WPMediaStorage;
 
 use Monolog\Logger;
 use Monolog\Handler\ErrorLogHandler;
+use OpenCloud\Common\Error\BadResponseError;
 use Psr\Log\LoggerInterface;
+use WP_Error;
 use WPMediaStorage\ObjectStorageFactory;
 
 require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
@@ -20,7 +22,7 @@ class CloudImageEditorGD extends \WP_Image_Editor_GD
     
     private function getLogger() {
         if (!$this->logger) {
-            $this->logger = new Logger('media-cloud/CloudImageEditorGD');
+            $this->logger = new Logger('media-storage/CloudImageEditorGD');
             $this->logger->pushHandler(new ErrorLogHandler());
         }
 
@@ -35,16 +37,23 @@ class CloudImageEditorGD extends \WP_Image_Editor_GD
      */
     protected function _save($image, $filename = null, $mime_type = null) {
         $logger = $this->getLogger();
-        
-        $result = parent::_save($image, $filename, $mime_type);
 
-        $objectStorage = ObjectStorageFactory::getInstance();
+        // Call parent to save locally
+        $result = parent::_save($image, $filename, $mime_type);
 
         $uploadsDir = wp_get_upload_dir();
         $objectName = substr($result['path'], strlen($uploadsDir['basedir']) + 1);
         $objectContent = file_get_contents($result['path']);
+        
+        $logger->debug(sprintf('Storing image editor result %s as %s', $result['path'], $objectName));
 
-        $objectStorage->storeObject($objectName, $objectContent);
+        try {
+            $objectStorage = ObjectStorageFactory::getInstance();
+            $objectStorage->storeObject($objectName, $objectContent);
+        } catch (BadResponseError $e) {
+            $logger->error(sprintf('Error storing file %s: %s', $objectName, $e), [$image, $filename, $mime_type]);
+            return new WP_Error('image_save_error', __('Image Editor Save Failed'));
+        }
 
         return $result;
     }

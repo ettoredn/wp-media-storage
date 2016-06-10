@@ -16,65 +16,41 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Monolog\Logger;
 use Monolog\Handler\ErrorLogHandler;
+use OpenCloud\Common\Error\BadResponseError;
 
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 $logger = new Logger('media-storage');
 $logger->pushHandler(new ErrorLogHandler());
 
+$options = get_option('mediastorage_settings');
+
 /**
  * @param array|string $media
- * @param string $context
+ * @param string $context 'upload' | 'sideload'
  * @return array
+ * @throws BadResponseError
  */
 $addUploadHandler = function (array $media, string $context) use ($logger) {
-	$logger->debug('Storing uploaded media files on the cloud', [$media, $context]);
-	$uploadsDir = wp_get_upload_dir();
-
 	// Assuming $media->file exists
+	$uploadsDir = wp_get_upload_dir();
 	$objectName = substr($media['file'], strlen($uploadsDir['basedir']) + 1);
 	$objectContent = file_get_contents($media['file']);
-
-	// $context := 'upload' | 'sideload'
-
-	$objectStorage = ObjectStorageFactory::getInstance();
-	$objectStorage->storeObject($objectName, $objectContent);
-
-	return array_merge($media, ['url' => 'https://storage.gra1.cloud.ovh.net/v1/AUTH_83cd2bf7ff8d40aca02b0448154cf794/media/' . $objectName]);
-};
-
-/**
- * @param string $url
- * @param $postId
- * @return string
- */
-$rewriteAttachmentUrl = function (string $url, int $postId) use ($logger) {
-	$logger->debug(sprintf('Rewriting attachment url %s for post %d', $url, $postId));
-
-	$uploadsDir = wp_get_upload_dir();
-	$objectName = substr($url, strlen($uploadsDir['baseurl']) + 1);
-
-	$objectStorage = ObjectStorageFactory::getInstance();
-
-	$url = $objectStorage->getObjectUrl($objectName);
-
-	return $url;
-};
-
-$rewriteImageSources = function (array $sources, array $size_array, string $image_src, array $image_meta, int $attachment_id) use ($logger) {
-//	$logger->debug('Storing uploaded media files on the cloud', [$ources]);
-
-	$objectStorage = ObjectStorageFactory::getInstance();
-
 	
-	foreach ($sources as $key => $source) {
-		$uploadsDir = wp_get_upload_dir();
-		$objectName = substr($source['url'], strlen($uploadsDir['baseurl']) + 1);
-		$sources[$key]['url'] = $objectStorage->getObjectUrl($objectName);
+	$logger->debug(sprintf('Storing uploaded media file %s as %s', $media['file'], $objectName), [$context]);
+
+	try {
+		$objectStorage = ObjectStorageFactory::getInstance();
+		/** @var \OpenStack\ObjectStore\v1\Models\Object $obj */
+		$obj = $objectStorage->storeObject($objectName, $objectContent);
+		$media['url'] = $obj->getPublicUri();
+	} catch (BadResponseError $e) {
+		$logger->error(sprintf('Error storing file %s: %s', $objectName, $e), [$media, $context]);
+		$media['error'] = (string) $e;
 	}
-	
-	return $sources;
+
+	return $media;
 };
 
 
@@ -83,8 +59,6 @@ $rewriteImageSources = function (array $sources, array $size_array, string $imag
  * @return array
  */
 $overrideImageEditors = function (array $image_editors) use ($logger) {
-	$logger->debug('Storing uploaded media files on the cloud', [$image_editors]);
-
 	foreach ($image_editors as $key => $editor) {
 		if ($editor == 'WP_Image_Editor_GD')
 			$image_editors[$key] = CloudImageEditorGD::class;
@@ -93,14 +67,57 @@ $overrideImageEditors = function (array $image_editors) use ($logger) {
 	return $image_editors;
 };
 
+/**
+ * @param string $url
+ * @param $postId
+ * @return string
+ */
+$rewriteAttachmentUrl = function (string $url, int $postId) use ($logger) {
+	$uploadsDir = wp_get_upload_dir();
+	$objectName = substr($url, strlen($uploadsDir['baseurl']) + 1);
+
+	$objectStorage = ObjectStorageFactory::getInstance();
+
+	try {
+		$url = $objectStorage->getObjectUrl($objectName);
+	} catch (BadResponseError $e) {
+		$logger->error(sprintf('Object %s does not exist', $objectName));
+	}
+
+	return $url;
+};
+
+$rewriteImageSources = function (array $sources, array $size_array, string $image_src, array $image_meta, int $attachment_id) use ($logger) {
+	$objectStorage = ObjectStorageFactory::getInstance();
+
+	foreach ($sources as $key => $source) {
+		$uploadsDir = wp_get_upload_dir();
+		$objectName = substr($source['url'], strlen($uploadsDir['baseurl']) + 1);
+
+		try {
+			$url = $objectStorage->getObjectUrl($objectName);
+			$sources[$key]['url'] = $url;
+		} catch (BadResponseError $e) {
+			$logger->error(sprintf('Object %s does not exist', $objectName));
+		}
+	}
+	
+	return $sources;
+};
+
+
 $deleteFile = function (string $path) use ($logger) {
-	$logger->debug('Deleting file ', [$path]);
+	$logger->debug(sprintf('Deleting file %s', $path), [$path]);
 
 	$uploadsDir = wp_get_upload_dir();
 	$objectName = substr($path, strlen($uploadsDir['basedir']) + 1);
 
-	$objectStorage = ObjectStorageFactory::getInstance();
-	$objectStorage->deleteObject($objectName);
+	try {
+		$objectStorage = ObjectStorageFactory::getInstance();
+		$objectStorage->deleteObject($objectName);
+	} catch (BadResponseError $e) {
+		$logger->error(sprintf('Unable to delete object %s: %s', $objectName, $e), [$path]);
+	}
 	
 	return $path;
 };
@@ -128,11 +145,14 @@ if (!has_filter('wp_handle_upload', $addUploadHandler))
 if (!has_filter('wp_image_editors', $overrideImageEditors))
 	add_filter('wp_image_editors', $overrideImageEditors);
 
-if (!has_filter('wp_get_attachment_url', $rewriteAttachmentUrl))
-	add_filter('wp_get_attachment_url', $rewriteAttachmentUrl, 10, 2);
 
-if (!has_filter('wp_calculate_image_srcset', $rewriteImageSources))
-	add_filter('wp_calculate_image_srcset', $rewriteImageSources, 10, 5);
+if (boolval($options['rewriteUrl'])) {
+	if (!has_filter('wp_get_attachment_url', $rewriteAttachmentUrl))
+		add_filter('wp_get_attachment_url', $rewriteAttachmentUrl, 10, 2);
+
+	if (!has_filter('wp_calculate_image_srcset', $rewriteImageSources))
+		add_filter('wp_calculate_image_srcset', $rewriteImageSources, 10, 5);
+}
 
 if (!has_filter('wp_delete_file', $deleteFile))
 	add_filter('wp_delete_file', $deleteFile);
@@ -141,17 +161,10 @@ if (!has_filter('wp_unique_filename', $uniqueFilename))
 	add_filter('wp_unique_filename', $uniqueFilename, 10, 3);
 
 
+//register_activation_hook(__FILE__, $initOptions);
 
-// Create tables
-function setupDbTables() {
-	global $wpdb;
-
-	$tableName = $wpdb->prefix . "media_storage";
-
-	// TODO
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once dirname( __FILE__ ) . '/cli/media-sync.php';
+} else {
+	include __DIR__ . '/admin/admin-page.php';
 }
-
-// Triggered when the plugin is activated
-register_activation_hook( __FILE__, 'setupDbTables' );
-
-include __DIR__ . '/admin-page.php';

@@ -3,7 +3,8 @@
     "description": "Offload media to cloud object storages",
     "require": {
         "php-opencloud/openstack": "^2.0",
-        "monolog/monolog": "^1.19"
+        "monolog/monolog": "^1.19",
+        "wp-cli/wp-cli": "^0.23.1"
     },
     "license": "ISC",
     "authors": [

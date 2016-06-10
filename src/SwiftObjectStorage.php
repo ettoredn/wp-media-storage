@@ -4,6 +4,7 @@ namespace WPMediaStorage;
 
 
 use OpenCloud\Common\Error\BadResponseError;
+use OpenStack\ObjectStore\v1\Models\Object;
 use Psr\Log\LoggerInterface;
 use OpenStack\OpenStack;
 use OpenStack\Identity\v2\Service;
@@ -23,6 +24,11 @@ class SwiftObjectStorage implements ObjectStorage
     protected $logger;
 
     /**
+     * @var string
+     */
+    protected $storageUrl;
+
+    /**
      * @var \OpenStack\ObjectStore\v1\Models\Container
      */
     protected $container;
@@ -37,9 +43,15 @@ class SwiftObjectStorage implements ObjectStorage
             'handler'  => HandlerStack::create(),
         ]));
 
+        list(, $this->storageUrl) = $identityService->authenticate(array_merge($config, [
+            'urlType' => 'publicURL',
+            'catalogName' => 'swift',
+            'catalogType' => 'object-store'
+        ]));
+
         $options = array_merge($config, [
             'identityService' => $identityService,
-            'logger' => $logger
+            'logger' => $logger,
         ]);
 
         $stack = new OpenStack($options);
@@ -66,11 +78,11 @@ class SwiftObjectStorage implements ObjectStorage
      * @param string $name
      * @param mixed $content
      * @param bool $overwrite
-     * @return mixed
+     * @return Object
      */
     function storeObject(string $name, $content, bool $overwrite = true)
     {
-        $this->container->createObject([
+        return $this->container->createObject([
             'name' => $name,
             'content' => $content,
             'ETag' => hash('md5', $content)
@@ -83,10 +95,12 @@ class SwiftObjectStorage implements ObjectStorage
      */
     function getObjectUrl(string $objectName)
     {
-//        if (!$this->hasObject($objectName))
-//            throw new \RuntimeException(sprintf('Cannot generate URL for object %s because it does not exist', $objectName));
+        /** @var \OpenStack\ObjectStore\v1\Models\Object $object */
+        $object = $this->container->getObject($objectName);
 
-        return sprintf('%s/%s/%s', $this->config['publicUrl'], $this->config['container'], $objectName);
+        $url = (string) $object->getPublicUri();
+        return $url;
+//        return sprintf('%s/%s/%s', $this->storageUrl, $this->config['container'], $objectName);
     }
 
     /**
