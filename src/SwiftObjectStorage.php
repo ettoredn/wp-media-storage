@@ -85,7 +85,7 @@ class SwiftObjectStorage implements ObjectStorage
             if (!($spl instanceof \SplFileInfo))
                 throw new \RuntimeException('Expecting an instance of \SplFileInfo');
 
-            if (strlen(basename($objectName)) < 10) {
+            if (strlen(basename($objectName)) <= 100) {
                 $archive->addFile($spl->getPathname(), $objectName);
                 $size += $spl->getSize();
             } else {
