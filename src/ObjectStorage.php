@@ -30,6 +30,12 @@ interface ObjectStorage
     function storeObject(string $name, $content, bool $overwrite = true);
 
     /**
+     * @param array $files
+     * @return void
+     */
+    function storeObjects(array $files);
+
+    /**
      * @param string|null $objectName
      * @return string
      */
@@ -40,4 +46,10 @@ interface ObjectStorage
      * @return mixed
      */
     function deleteObject(string $objectName);
+
+    /**
+     * @param array $options
+     * @return array
+     */
+    function listObjects(array $options = []);
 }

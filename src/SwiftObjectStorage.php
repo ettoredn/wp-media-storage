@@ -3,6 +3,7 @@
 namespace WPMediaStorage;
 
 
+use GuzzleHttp\Psr7\Stream;
 use OpenCloud\Common\Error\BadResponseError;
 use OpenStack\ObjectStore\v1\Models\Object;
 use Psr\Log\LoggerInterface;
@@ -66,6 +67,35 @@ class SwiftObjectStorage implements ObjectStorage
     }
 
     /**
+     * @param array $files
+     * @return void
+     */
+    function storeObjects(array $files)
+    {
+        $archive = new \PharData('/tmp/buld-extract.tar');
+        foreach ($files as $objectName => $spl) {
+            /** @var \SplFileInfo $spl */
+            if (!($spl instanceof \SplFileInfo))
+                throw new \RuntimeException('Expecting an instance of \SplFileInfo');
+            
+            $archive->addFile($spl->getPathname(), $objectName);
+        }
+
+        
+        if (!($handle = fopen('/tmp/buld-extract.tar', 'r')))
+            throw new \RuntimeException(sprintf('Unable to open the tar archive we just created??'));
+
+        $data = [
+            'extract-archive' => 'tar',
+            'stream' => new Stream($handle),
+            'containerName' => $this->container->name
+        ];
+        $this->container->model(Archive::class)->upload($data);
+        
+        fclose($handle);
+    }
+
+    /**
      * @param string $name
      * @return mixed
      */
@@ -118,5 +148,47 @@ class SwiftObjectStorage implements ObjectStorage
             if ($e->getResponse()->getStatusCode() != 404)
                 throw $e;
         }
+    }
+
+    /**
+     * @param array $config
+     * @return array
+     */
+    function listObjects(array $config = [])
+    {
+//        'name'      => $this->params->containerName(),
+//        'format'    => $this->params->format(),
+//        'limit'     => $this->params->limit(),
+//        'marker'    => $this->params->marker(),
+//        'endMarker' => $this->params->endMarker(),
+//        'prefix'    => $this->params->prefix(),
+//        'path'      => $this->params->path(),
+//        'delimiter' => $this->params->delimiter(),
+//        'newest'    => $this->params->newest(),
+
+        $hasLimit = intval($config['limit']) > 0;
+        $options = [];
+
+        if (array_key_exists('limit', $config) && intval($config['limit']) > 0)
+            $options['limit'] = intval($config['limit']);
+        if (array_key_exists('prefix', $config) && !empty($config['prefix']))
+            $options['prefix'] = $config['prefix'];
+
+        $objects = [];
+        do {
+            $results = 0;
+            foreach ($this->container->listObjects($options) as $object) {
+                /** @var \OpenStack\ObjectStore\v1\Models\Object $object */
+                $objects[$object->name] = $object;
+
+                $results++;
+                $options['marker'] = $object->name;
+
+                if ($hasLimit && count($objects) >= $options['limit'])
+                    break;
+            }
+        } while ($results > 0 && (!$hasLimit || count($objects) < $options['limit']));
+
+        return $objects;
     }
 }

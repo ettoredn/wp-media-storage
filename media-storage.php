@@ -166,7 +166,7 @@ if (array_key_exists('rewriteUrl', $options) && boolval($options['rewriteUrl']))
 //register_activation_hook(__FILE__, $initOptions);
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
-	require_once dirname( __FILE__ ) . '/cli/media-sync.php';
+	require_once dirname( __FILE__ ) . '/cli/media-storage.php';
 } else {
 	include __DIR__ . '/admin/admin-page.php';
 }
