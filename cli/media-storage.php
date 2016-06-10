@@ -56,11 +56,14 @@ class Media_Storage_Command extends WP_CLI_Command
      *
      * ## OPTIONS
      *
+     * [<file>]
+     * : Media file to upload. It must be inside the uploads directory.
+     *
      * [--dry]
      * : Do not perform any operation on the object store.
      * 
      * [--chunk-size=<s>]
-     * : Chunk size in MiB
+     * : Chunk size in MiB (default 500)
      *
      * @param array $args
      * @param array $assoc_args
@@ -69,6 +72,23 @@ class Media_Storage_Command extends WP_CLI_Command
         $dry = $assoc_args['dry'] ?? false;
         $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 500;
         $chunkSize *= 1024*1024;
+
+        if ($args > 0) {
+            // Upload each file at once. Used as a workaround to Phar which limits filenames to 100 chars.
+            foreach ($args as $name) {
+                $pathname = realpath($name);
+                if (!$pathname)
+                    WP_CLI::error(sprintf('Unable to locate file %s', $name));
+
+                $relPath = wp_get_upload_dir()['basedir'];
+                $objectName = substr($pathname, strlen($relPath) + 1);
+
+                $this->storage->storeObject($objectName, file_get_contents($pathname));
+                WP_CLI::success(sprintf('Upload object %s', $objectName));
+            }
+
+            return;
+        }
 
         $finder = new Finder();
         $finder->ignoreDotFiles(true)->ignoreUnreadableDirs()->files()->in(wp_get_upload_dir()['basedir']);
