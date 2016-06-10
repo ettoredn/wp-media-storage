@@ -139,26 +139,28 @@ $uniqueFilename = function ($filename, $ext, $dir) use ($logger) {
 	return wp_basename("/$objectName");
 };
 
-if (!has_filter('wp_handle_upload', $addUploadHandler))
-	add_filter( 'wp_handle_upload', $addUploadHandler, 10, 2);
 
-if (!has_filter('wp_image_editors', $overrideImageEditors))
-	add_filter('wp_image_editors', $overrideImageEditors);
+if (array_key_exists('store', $options) && boolval($options['store'])) {
+	if (!has_filter('wp_handle_upload', $addUploadHandler))
+		add_filter( 'wp_handle_upload', $addUploadHandler, 10, 2);
 
+	if (!has_filter('wp_image_editors', $overrideImageEditors))
+		add_filter('wp_image_editors', $overrideImageEditors);
 
-if (boolval($options['rewriteUrl'])) {
+	if (!has_filter('wp_delete_file', $deleteFile))
+		add_filter('wp_delete_file', $deleteFile);
+
+	if (!has_filter('wp_unique_filename', $uniqueFilename))
+		add_filter('wp_unique_filename', $uniqueFilename, 10, 3);
+}
+
+if (array_key_exists('rewriteUrl', $options) && boolval($options['rewriteUrl'])) {
 	if (!has_filter('wp_get_attachment_url', $rewriteAttachmentUrl))
 		add_filter('wp_get_attachment_url', $rewriteAttachmentUrl, 10, 2);
 
 	if (!has_filter('wp_calculate_image_srcset', $rewriteImageSources))
 		add_filter('wp_calculate_image_srcset', $rewriteImageSources, 10, 5);
 }
-
-if (!has_filter('wp_delete_file', $deleteFile))
-	add_filter('wp_delete_file', $deleteFile);
-
-if (!has_filter('wp_unique_filename', $uniqueFilename))
-	add_filter('wp_unique_filename', $uniqueFilename, 10, 3);
 
 
 //register_activation_hook(__FILE__, $initOptions);

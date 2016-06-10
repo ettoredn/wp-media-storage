@@ -24,6 +24,13 @@ function mediastorage_settings_init(  ) {
 
     /** GENERAL **/
     add_settings_field(
+        'store',
+        __( 'Enable object store', 'wordpress' ),
+        'general_store_render',
+        'general',
+        'mediastorage_general_section'
+    );
+    add_settings_field(
         'rewriteUrl',
         __( 'Enable URL rewrite', 'wordpress' ),
         'general_rewrite_render',
@@ -31,9 +38,13 @@ function mediastorage_settings_init(  ) {
         'mediastorage_general_section'
     );
 
+    function general_store_render() {
+        $options = get_option( 'mediastorage_settings' );
+        ?> <input type='checkbox' name='mediastorage_settings[store]' <?php checked( $options['store'] ?? 0, 1 ); ?> value='1'> <?php
+    }
     function general_rewrite_render() {
         $options = get_option( 'mediastorage_settings' );
-        ?> <input type='checkbox' name='mediastorage_settings[rewriteUrl]' <?php checked( $options['rewriteUrl'], 1 ); ?> value='1'> <?php
+        ?> <input type='checkbox' name='mediastorage_settings[rewriteUrl]' <?php checked( $options['rewriteUrl'] ?? 0, 1 ); ?> value='1'> <?php
     }
 
 
@@ -202,7 +213,7 @@ function mediastorage_options_page(  ) {
     ?>
     <form action='options.php' method='post'>
 
-        <h2>Media Cloud</h2>
+        <h2>Media Storage</h2>
 
         <?php
         settings_fields('general');
