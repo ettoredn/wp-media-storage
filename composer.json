@@ -1,5 +1,5 @@
 {
-    "name": "ettoredn/media-cloud",
+    "name": "ettoredn/wp-media-storage",
     "description": "Offload media to cloud object storages",
     "require": {
         "php-opencloud/openstack": "^2.0",
@@ -14,7 +14,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "WPMediaCloud\\": "src/"
+            "WPMediaStorage\\": "src/"
         }
     }
 }

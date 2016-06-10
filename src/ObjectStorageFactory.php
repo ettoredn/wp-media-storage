@@ -1,6 +1,6 @@
 <?php
 
-namespace WPMediaCloud;
+namespace WPMediaStorage;
 
 
 use Monolog\Handler\ErrorLogHandler;
@@ -25,7 +25,7 @@ class ObjectStorageFactory
     public static function getInstance()
     {
         // Retrieve config and instantiace the correct class
-        $options = get_option( 'mediacloud_settings' );
+        $options = get_option('mediastorage_settings');
 
         $swiftOptions = [];
         foreach ($options as $name => $value) {
@@ -36,7 +36,7 @@ class ObjectStorageFactory
         $swiftOptions['debugLog'] = boolval($swiftOptions['debugLog']);
         
         if (!self::$logger) {
-            self::$logger = new Logger('media-cloud/ObjectStorage');
+            self::$logger = new Logger('media-storage/ObjectStorage');
             self::$logger->pushHandler(new ErrorLogHandler());
         }
         

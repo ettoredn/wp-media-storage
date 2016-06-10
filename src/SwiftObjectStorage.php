@@ -1,6 +1,6 @@
 <?php
 
-namespace WPMediaCloud;
+namespace WPMediaStorage;
 
 
 use OpenCloud\Common\Error\BadResponseError;

@@ -1,23 +1,23 @@
 <?php
-add_action( 'admin_menu', 'mediacloud_add_admin_menu' );
-add_action( 'admin_init', 'mediacloud_settings_init' );
+add_action( 'admin_menu', 'mediastorage_add_admin_menu' );
+add_action( 'admin_init', 'mediastorage_settings_init' );
 
 
-function mediacloud_add_admin_menu(  ) {
+function mediastorage_add_admin_menu(  ) {
 
-    add_options_page( 'Media Cloud', 'Media Cloud', 'manage_options', 'media_cloud', 'mediacloud_options_page' );
+    add_options_page( 'Media Storage', 'Media Storage', 'manage_options', 'media_storage', 'mediastorage_options_page' );
 
 }
 
 
-function mediacloud_settings_init(  ) {
+function mediastorage_settings_init(  ) {
 
-    register_setting( 'swift', 'mediacloud_settings' );
+    register_setting( 'swift', 'mediastorage_settings' );
 
     add_settings_section(
-        'mediacloud_swift_section',
+        'mediastorage_swift_section',
         __( 'OpenStack Swift', 'wordpress' ),
-        'mediacloud_settings_section_callback',
+        'mediastorage_settings_section_callback',
         'swift'
     );
 
@@ -26,7 +26,7 @@ function mediacloud_settings_init(  ) {
         __( 'Username', 'wordpress' ),
         'swift_username_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -34,7 +34,7 @@ function mediacloud_settings_init(  ) {
         __( 'Password', 'wordpress' ),
         'swift_password_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -42,7 +42,7 @@ function mediacloud_settings_init(  ) {
         __( 'Tenant Id', 'wordpress' ),
         'swift_tenantId_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -50,7 +50,7 @@ function mediacloud_settings_init(  ) {
         __( 'Tenant name', 'wordpress' ),
         'swift_tenantName_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -58,7 +58,7 @@ function mediacloud_settings_init(  ) {
         __( 'Region', 'wordpress' ),
         'swift_region_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -66,7 +66,7 @@ function mediacloud_settings_init(  ) {
         __( 'Container', 'wordpress' ),
         'swift_container_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -74,7 +74,7 @@ function mediacloud_settings_init(  ) {
         __( 'Auth URL', 'wordpress' ),
         'swift_authUrl_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -82,7 +82,7 @@ function mediacloud_settings_init(  ) {
         __( 'Container public URL', 'wordpress' ),
         'swift_publicUrl_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
     add_settings_field(
@@ -90,7 +90,7 @@ function mediacloud_settings_init(  ) {
         __( 'Debug', 'wordpress' ),
         'swift_debugLog_render',
         'swift',
-        'mediacloud_swift_section'
+        'mediastorage_swift_section'
     );
 
 }
@@ -98,9 +98,9 @@ function mediacloud_settings_init(  ) {
 
 function swift_username_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_username]' value='<?php echo $options['swift_username']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_username]' value='<?php echo $options['swift_username']; ?>'>
     <?php
 
 }
@@ -108,9 +108,9 @@ function swift_username_render(  ) {
 
 function swift_password_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_password]' value='<?php echo $options['swift_password']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_password]' value='<?php echo $options['swift_password']; ?>'>
     <?php
 
 }
@@ -118,9 +118,9 @@ function swift_password_render(  ) {
 
 function swift_tenantId_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_tenantId]' value='<?php echo $options['swift_tenantId']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_tenantId]' value='<?php echo $options['swift_tenantId']; ?>'>
     <?php
 
 }
@@ -128,9 +128,9 @@ function swift_tenantId_render(  ) {
 
 function swift_tenantName_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_tenantName]' value='<?php echo $options['swift_tenantName']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_tenantName]' value='<?php echo $options['swift_tenantName']; ?>'>
     <?php
 
 }
@@ -138,9 +138,9 @@ function swift_tenantName_render(  ) {
 
 function swift_region_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_region]' value='<?php echo $options['swift_region']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_region]' value='<?php echo $options['swift_region']; ?>'>
     <?php
 
 }
@@ -148,18 +148,18 @@ function swift_region_render(  ) {
 
 function swift_container_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_container]' value='<?php echo $options['swift_container']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_container]' value='<?php echo $options['swift_container']; ?>'>
     <?php
 
 }
 
 function swift_publicUrl_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_publicUrl]' value='<?php echo $options['swift_publicUrl']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_publicUrl]' value='<?php echo $options['swift_publicUrl']; ?>'>
     <?php
 
 }
@@ -167,30 +167,30 @@ function swift_publicUrl_render(  ) {
 
 function swift_authUrl_render(  ) {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='text' name='mediacloud_settings[swift_authUrl]' value='<?php echo $options['swift_authUrl']; ?>'>
+    <input type='text' name='mediastorage_settings[swift_authUrl]' value='<?php echo $options['swift_authUrl']; ?>'>
     <?php
 }
 
 function swift_debugLog_render(  )
 {
 
-    $options = get_option( 'mediacloud_settings' );
+    $options = get_option( 'mediastorage_settings' );
     ?>
-    <input type='checkbox' name='mediacloud_settings[swift_debugLog]' <?php checked( $options['swift_debugLog'], 1 ); ?> value='1'>
+    <input type='checkbox' name='mediastorage_settings[swift_debugLog]' <?php checked( $options['swift_debugLog'], 1 ); ?> value='1'>
     <?php
 }
 
 
-function mediacloud_settings_section_callback(  ) {
+function mediastorage_settings_section_callback(  ) {
 
     echo __( 'This section description', 'wordpress' );
 
 }
 
 
-function mediacloud_options_page(  ) {
+function mediastorage_options_page(  ) {
 
     ?>
     <form action='options.php' method='post'>

@@ -1,16 +1,16 @@
 <?php
 
 /*
-Plugin Name: Media Cloud
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
+Plugin Name: Media Storage
+Plugin URI: https://github.com/ettoredn/wp-media-storage
 Description: A brief description of the Plugin.
 Version: 1.0
 Author: Ettore Del Negro
-Author URI: http://URI_Of_The_Plugin_Author
-License: A "Slug" license name e.g. GPL2
+Author URI: http://ettoredelnegro.me
+License: ISC
 */
 
-namespace WPMediaCloud;
+namespace WPMediaStorage;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -20,7 +20,7 @@ use Monolog\Handler\ErrorLogHandler;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$logger = new Logger('media-cloud');
+$logger = new Logger('media-storage');
 $logger->pushHandler(new ErrorLogHandler());
 
 /**
@@ -146,7 +146,7 @@ if (!has_filter('wp_unique_filename', $uniqueFilename))
 function setupDbTables() {
 	global $wpdb;
 
-	$tableName = $wpdb->prefix . "media_cloud";
+	$tableName = $wpdb->prefix . "media_storage";
 
 	// TODO
 }

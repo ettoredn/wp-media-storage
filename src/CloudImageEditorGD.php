@@ -1,12 +1,12 @@
 <?php
 
-namespace WPMediaCloud;
+namespace WPMediaStorage;
 
 
 use Monolog\Logger;
 use Monolog\Handler\ErrorLogHandler;
 use Psr\Log\LoggerInterface;
-use WPMediaCloud\ObjectStorageFactory;
+use WPMediaStorage\ObjectStorageFactory;
 
 require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
 require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';

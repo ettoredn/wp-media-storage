@@ -6,7 +6,7 @@
  * Time: 22:25
  */
 
-namespace WPMediaCloud;
+namespace WPMediaStorage;
 
 
 use Monolog\Handler\ErrorLogHandler;
