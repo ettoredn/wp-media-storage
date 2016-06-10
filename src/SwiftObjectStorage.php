@@ -84,22 +84,27 @@ class SwiftObjectStorage implements ObjectStorage
             /** @var \SplFileInfo $spl */
             if (!($spl instanceof \SplFileInfo))
                 throw new \RuntimeException('Expecting an instance of \SplFileInfo');
-            
-            $archive->addFile($spl->getPathname(), $objectName);
-            $size += $spl->getSize();
+
+            if (strlen(basename($objectName)) < 10) {
+                $archive->addFile($spl->getPathname(), $objectName);
+                $size += $spl->getSize();
+            } else {
+                $this->storeObject($objectName, file_get_contents($spl->getPathname()));
+                if ( defined( 'WP_CLI' ) && WP_CLI )
+                    WP_CLI::line(sprintf('Store: uploaded %s outside of the archive as there was an error adding it', $objectName));
+            }
 
             if ($size > $chunkSize) {
                 $this->storeArchive($archivePathname);
-                @unlink($archivePathname);
 
                 $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
                 $archive = new \PharData($archivePathname);
                 $size = 0;
             }
         }
-        
-        $this->storeArchive($archivePathname);
-        @unlink($archivePathname);
+
+        if ($archive->count() > 0)
+            $this->storeArchive($archivePathname);
     }
 
     /**
@@ -107,6 +112,9 @@ class SwiftObjectStorage implements ObjectStorage
      */
     protected function storeArchive(string $archive)
     {
+        if (!is_file($archive))
+            throw new \RuntimeException(sprintf('!is_file(%s', $archive));
+
         if (!($handle = fopen($archive, 'r')))
             throw new \RuntimeException(sprintf('Unable to open the tar archive we just created??'));
 
@@ -121,6 +129,7 @@ class SwiftObjectStorage implements ObjectStorage
         $this->container->model(Archive::class)->upload($data);
 
         fclose($handle);
+        @unlink($archive);
     }
 
     /**

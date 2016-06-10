@@ -73,7 +73,7 @@ class Media_Storage_Command extends WP_CLI_Command
         $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 500;
         $chunkSize *= 1024*1024;
 
-        if ($args > 0) {
+        if (count($args) > 0) {
             // Upload each file at once. Used as a workaround to Phar which limits filenames to 100 chars.
             foreach ($args as $name) {
                 $pathname = realpath($name);
