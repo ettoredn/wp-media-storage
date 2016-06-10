@@ -11,6 +11,7 @@ use OpenStack\OpenStack;
 use OpenStack\Identity\v2\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
+use WP_CLI;
 
 class SwiftObjectStorage implements ObjectStorage
 {
@@ -75,7 +76,7 @@ class SwiftObjectStorage implements ObjectStorage
         // Use wp_get_uploads_dir()
         $count = 0;
 
-        $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
+        $archivePathname = sprintf('%s/wp-content/media-storage-tmp-%d.tar', ABSPATH, $count++);
         $archive = new \PharData($archivePathname);
         $size = 0;
         foreach ($files as $objectName => $spl) {
@@ -89,6 +90,7 @@ class SwiftObjectStorage implements ObjectStorage
             if ($size > 1*1024*1024*1024) {
 //            if ($size > 500*1024) {
                 $this->storeArchive($archivePathname);
+                @unlink($archivePathname);
 
                 $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
                 $archive = new \PharData($archivePathname);
@@ -97,6 +99,7 @@ class SwiftObjectStorage implements ObjectStorage
         }
         
         $this->storeArchive($archivePathname);
+        @unlink($archivePathname);
     }
 
     /**
@@ -106,6 +109,9 @@ class SwiftObjectStorage implements ObjectStorage
     {
         if (!($handle = fopen($archive, 'r')))
             throw new \RuntimeException(sprintf('Unable to open the tar archive we just created??'));
+
+        if ( defined( 'WP_CLI' ) && WP_CLI )
+            WP_CLI::line(sprintf('Uploading archive %s', $archive));
 
         $data = [
             'extract-archive' => 'tar',
