@@ -58,12 +58,17 @@ class Media_Storage_Command extends WP_CLI_Command
      *
      * [--dry]
      * : Do not perform any operation on the object store.
+     * 
+     * [--chunk-size=<s>]
+     * : Chunk size in MiB
      *
      * @param array $args
      * @param array $assoc_args
      */
     public function upload(array $args, array $assoc_args) {
         $dry = $assoc_args['dry'] ?? false;
+        $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 500;
+        $chunkSize *= 1024*1024;
 
         $finder = new Finder();
         $finder->ignoreDotFiles(true)->ignoreUnreadableDirs()->files()->in(wp_get_upload_dir()['basedir']);
@@ -86,7 +91,7 @@ class Media_Storage_Command extends WP_CLI_Command
         if (count($toUpload) > 0) {
             WP_CLI::line(sprintf('%d local media files not present in the store, uploading...', count($toUpload)));
             if (!$dry)
-                $this->storage->storeObjects($toUpload);
+                $this->storage->storeObjects($toUpload, ['chunkSize' => $chunkSize]);
         }
         else
             WP_CLI::line(sprintf('No local local media file missing from the store'));

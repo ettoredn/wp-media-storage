@@ -31,9 +31,9 @@ interface ObjectStorage
 
     /**
      * @param array $files
-     * @return void
+     * @param array $options
      */
-    function storeObjects(array $files);
+    function storeObjects(array $files, array $options);
 
     /**
      * @param string|null $objectName

@@ -69,11 +69,12 @@ class SwiftObjectStorage implements ObjectStorage
 
     /**
      * @param array $files
-     * @return void
+     * @param array $options
      */
-    function storeObjects(array $files)
+    function storeObjects(array $files, array $options)
     {
         // Use wp_get_uploads_dir()
+        $chunkSize = array_key_exists('chunkSize', $options) ? intval($options['chunkSize']) : 500*1024*1024;
         $count = 0;
 
         $archivePathname = sprintf('%s/wp-content/media-storage-tmp-%d.tar', ABSPATH, $count++);
@@ -87,8 +88,7 @@ class SwiftObjectStorage implements ObjectStorage
             $archive->addFile($spl->getPathname(), $objectName);
             $size += $spl->getSize();
 
-            if ($size > 1*1024*1024*1024) {
-//            if ($size > 500*1024) {
+            if ($size > $chunkSize) {
                 $this->storeArchive($archivePathname);
                 @unlink($archivePathname);
 
