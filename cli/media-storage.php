@@ -57,8 +57,8 @@ class Media_Storage_Command extends WP_CLI_Command
      * 
      * ## OPTIONS
      * 
-     * [--dry]
-     * : Do not actually delete objects
+     * [--confirm]
+     * : Do actually delete objects
      * 
      * @param array $assocArgs
      */
@@ -66,7 +66,7 @@ class Media_Storage_Command extends WP_CLI_Command
     {
         global $post;
         
-        $dry = $assocArgs['dry'] ?? false;
+        $dry = !($assocArgs['confirm'] ?? false);
 
         $q = new \WP_Query([
             'post_type' => 'attachment',
