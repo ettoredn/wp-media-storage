@@ -80,7 +80,10 @@ class Media_Storage_Command extends WP_CLI_Command
             $q->the_post();
 
             // Add attachment
-            if ($pathname = get_attached_file($post->ID)) {
+            $pathname = get_attached_file($post->ID);
+            if (!$pathname) {
+                WP_CLI::warning(sprintf('Database: attachment %d does not have a corresponding \'_wp_attached_file\' meta. Skipping.', $post->ID));
+            } else {
                 $name = substr($pathname, strlen(wp_get_upload_dir()['basedir']) + 1);
                 $attachments[] = $name;
             }
@@ -88,10 +91,14 @@ class Media_Storage_Command extends WP_CLI_Command
             // Add attachment's thumbnail
             $meta = wp_get_attachment_metadata($post->ID);
             if ($meta && array_key_exists('sizes', $meta) && is_array($meta['sizes'])) {
-                foreach ($meta['sizes'] as $size) {
-                    $thumbName = sprintf('%s/%s', dirname($name), $size['file']);
-                    $attachments[] = $thumbName;
-                }
+
+                if (array_key_exists('file', $meta)) {
+                    foreach ($meta['sizes'] as $size) {
+                        $thumbName = sprintf('%s/%s', dirname($meta['file']), $size['file']);
+                        $attachments[] = $thumbName;
+                    }
+                } else
+                    WP_CLI::warning(sprintf('Database: attachment %d does not have \'file\' meta. Skipping.', $post->ID));
             }
         }
         WP_CLI::line(sprintf('Database: %d attachments found', count($attachments)));
