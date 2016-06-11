@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ettore
- * Date: 10/06/16
- * Time: 18:47
- */
 
 namespace WPMediaStorage;
 
