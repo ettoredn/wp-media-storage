@@ -54,12 +54,13 @@ class Media_Storage_Command extends WP_CLI_Command
 
     /**
      * Remove objects not associated with any attachment from the store.
-     * 
+     *
      * ## OPTIONS
-     * 
+     *
      * [--confirm]
      * : Do actually delete objects
-     * 
+     *
+     * @param array $args
      * @param array $assocArgs
      */
     public function clean(array $args, array $assocArgs)
@@ -71,7 +72,7 @@ class Media_Storage_Command extends WP_CLI_Command
         $q = new \WP_Query([
             'post_type' => 'attachment',
             'post_status' => 'inherit,private',
-            'paged' => false
+            'nopaging' => true
         ]);
 
         $attachments = [];
