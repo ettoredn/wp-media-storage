@@ -13,7 +13,7 @@ use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
-interface ObjectStorage
+interface ObjectStore
 {
     /**
      * @param string $name

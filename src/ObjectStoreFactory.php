@@ -7,10 +7,10 @@ use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
-class ObjectStorageFactory
+class ObjectStoreFactory
 {
     /**
-     * @var ObjectStorage
+     * @var ObjectStore
      */
     protected static $instance;
 
@@ -20,12 +20,13 @@ class ObjectStorageFactory
     protected static $logger;
 
     /**
-     * @return ObjectStorage
+     * @param LoggerInterface $logger
+     * @return ObjectStore
      */
-    public static function getInstance()
+    public static function getInstance(LoggerInterface $logger = null)
     {
         // Retrieve config and instantiace the correct class
-        $options = get_option('mediastorage_settings');
+        $options = MediaStoragePlugin::getOptions();
 
         $swiftOptions = [];
         foreach ($options as $name => $value) {
@@ -35,14 +36,14 @@ class ObjectStorageFactory
 
         $swiftOptions['debugLog'] = boolval($swiftOptions['debugLog']);
         
-        if (!self::$logger) {
-            self::$logger = new Logger('media-storage/ObjectStorage');
-            self::$logger->pushHandler(new ErrorLogHandler());
+        if (!$logger) {
+            $logger = new Logger('media-storage/ObjectStore');
+            $logger->pushHandler(new ErrorLogHandler());
         }
         
         if (!self::$instance) {
-            $class = new \ReflectionClass(SwiftObjectStorage::class);
-            self::$instance = $class->newInstance($swiftOptions, self::$logger);
+            $class = new \ReflectionClass(SwiftObjectStore::class);
+            self::$instance = $class->newInstance($swiftOptions, $logger);
         }
 
         return self::$instance;

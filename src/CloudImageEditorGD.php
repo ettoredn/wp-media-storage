@@ -8,7 +8,7 @@ use Monolog\Handler\ErrorLogHandler;
 use OpenCloud\Common\Error\BadResponseError;
 use Psr\Log\LoggerInterface;
 use WP_Error;
-use WPMediaStorage\ObjectStorageFactory;
+use WPMediaStorage\ObjectStoreFactory;
 
 require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
 require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';
@@ -48,7 +48,7 @@ class CloudImageEditorGD extends \WP_Image_Editor_GD
         $logger->debug(sprintf('Storing image editor result %s as %s', $result['path'], $objectName));
 
         try {
-            $objectStorage = ObjectStorageFactory::getInstance();
+            $objectStorage = ObjectStoreFactory::getInstance();
             $objectStorage->storeObject($objectName, $objectContent);
         } catch (BadResponseError $e) {
             $logger->error(sprintf('Error storing file %s: %s', $objectName, $e), [$image, $filename, $mime_type]);

@@ -5,7 +5,7 @@ namespace WPMediaStorage;
 use Symfony\Component\Finder\SplFileInfo;
 use WP_CLI;
 use WP_CLI_Command;
-use WPMediaStorage\ObjectStorageFactory;
+use WPMediaStorage\ObjectStoreFactory;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -17,7 +17,7 @@ class Media_Storage_Command extends WP_CLI_Command
 
     public function __construct()
     {
-        $this->storage = ObjectStorageFactory::getInstance();
+        $this->storage = ObjectStoreFactory::getInstance();
     }
 
     /**
@@ -120,5 +120,3 @@ class Media_Storage_Command extends WP_CLI_Command
         WP_CLI::success(sprintf('Uploaded %d files to the object store', count($toUpload)));
     }
 }
-
-WP_CLI::add_command('media storage', Media_Storage_Command::class);
