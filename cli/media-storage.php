@@ -70,7 +70,8 @@ class Media_Storage_Command extends WP_CLI_Command
 
         $q = new \WP_Query([
             'post_type' => 'attachment',
-            'post_status' => 'inherit,private'
+            'post_status' => 'inherit,private',
+            'paged' => false
         ]);
 
         $attachments = [];
