@@ -11,6 +11,7 @@ use OpenStack\OpenStack;
 use OpenStack\Identity\v2\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
+use Symfony\Component\Finder\SplFileInfo;
 use WP_CLI;
 
 class SwiftObjectStorage implements ObjectStorage
@@ -73,42 +74,54 @@ class SwiftObjectStorage implements ObjectStorage
      */
     function storeObjects(array $files, array $options)
     {
-        // Use wp_get_uploads_dir()
-        $chunkSize = array_key_exists('chunkSize', $options) ? intval($options['chunkSize']) : 500*1024*1024;
-        $count = 0;
+        $files = array_filter($files, function ($file, $objectName) {
+            /** @var SplFileInfo $file */
+            if (strlen(basename($objectName)) <= 100)
+                return true;
 
-        $archivePathname = sprintf('%s/wp-content/media-storage-tmp-%d.tar', ABSPATH, $count++);
-        $archive = new \PharData($archivePathname);
-        $size = 0;
-        foreach ($files as $objectName => $spl) {
-            /** @var \SplFileInfo $spl */
-            if (!($spl instanceof \SplFileInfo))
+            if (!($file instanceof \SplFileInfo))
                 throw new \RuntimeException('Expecting an instance of \SplFileInfo');
 
-            if (strlen(basename($objectName)) <= 100) {
-                $archive->addFile($spl->getPathname(), $objectName);
-                $size += $spl->getSize();
-            } else {
-                $this->storeObject($objectName, file_get_contents($spl->getPathname()));
-                if ( defined( 'WP_CLI' ) && WP_CLI )
-                    WP_CLI::line(sprintf('Store: uploaded %s outside of the archive as there was an error adding it', $objectName));
-            }
+            $this->storeObject($objectName, file_get_contents($file->getPathname()));
+
+            if (defined('WP_CLI') && WP_CLI)
+                WP_CLI::line(sprintf('Store: uploaded %s outside of the archive', $objectName));
+
+            return false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        $chunkSize = array_key_exists('chunkSize', $options) ? intval($options['chunkSize']) : 100 * 1024 * 1024;
+
+        $chunks = [];
+        $count = 0;
+        $size = 0;
+        foreach ($files as $objectName => $file) {
+            /** @var \SplFileInfo $spl */
+            if (!($file instanceof \SplFileInfo))
+                throw new \RuntimeException('Expecting an instance of \SplFileInfo');
+
+            $size += $file->getSize();
 
             if ($size > $chunkSize) {
-                $this->storeArchive($archivePathname);
-
-                $archivePathname = sprintf('/tmp/swift-archive-%d.tar', $count++);
-                $archive = new \PharData($archivePathname);
+                $count++;
                 $size = 0;
             }
+
+            if (!array_key_exists($count, $chunks))
+                $chunks[$count] = [];
+
+            $chunks[$count][$objectName] = $file;
         }
 
-        if ($archive->count() > 0)
+        foreach ($chunks as $id => $chunk) {
+            $archivePathname = sprintf('%s/wp-content/media-storage-tmp-%d.tar', ABSPATH, $id);
+            $archive = new \PharData($archivePathname);
+            $archive->buildFromIterator(new \ArrayIterator($chunk), wp_get_upload_dir()['basedir']);
             $this->storeArchive($archivePathname);
+        }
     }
-
     /**
-     * @param \SplFileInfo|string $archive
+     * @param string $archive
      */
     protected function storeArchive(string $archive)
     {
@@ -193,16 +206,6 @@ class SwiftObjectStorage implements ObjectStorage
      */
     function listObjects(array $config = [])
     {
-//        'name'      => $this->params->containerName(),
-//        'format'    => $this->params->format(),
-//        'limit'     => $this->params->limit(),
-//        'marker'    => $this->params->marker(),
-//        'endMarker' => $this->params->endMarker(),
-//        'prefix'    => $this->params->prefix(),
-//        'path'      => $this->params->path(),
-//        'delimiter' => $this->params->delimiter(),
-//        'newest'    => $this->params->newest(),
-
         $hasLimit = array_key_exists('limit', $config) && intval($config['limit']) > 0;
         $options = [];
 

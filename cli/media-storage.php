@@ -63,14 +63,14 @@ class Media_Storage_Command extends WP_CLI_Command
      * : Do not perform any operation on the object store.
      * 
      * [--chunk-size=<s>]
-     * : Chunk size in MiB (default 500)
+     * : Chunk size in MiB (default 100)
      *
      * @param array $args
      * @param array $assoc_args
      */
     public function upload(array $args, array $assoc_args) {
         $dry = $assoc_args['dry'] ?? false;
-        $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 500;
+        $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 100;
         $chunkSize *= 1024*1024;
 
         if (count($args) > 0) {
