@@ -3,8 +3,7 @@
     "description": "Offload media to cloud object storages",
     "require": {
         "php-opencloud/openstack": "^2.0",
-        "monolog/monolog": "^1.19",
-        "wp-cli/wp-cli": "^0.23.1"
+        "monolog/monolog": "^1.19"
     },
     "license": "ISC",
     "authors": [
@@ -17,5 +16,8 @@
         "psr-4": {
             "WPMediaStorage\\": "src/"
         }
+    },
+    "require-dev": {
+        "wp-cli/wp-cli": "^0.23.1"
     }
 }

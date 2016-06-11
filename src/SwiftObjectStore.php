@@ -90,7 +90,7 @@ class SwiftObjectStore implements ObjectStore
             return false;
         }, ARRAY_FILTER_USE_BOTH);
 
-        $chunkSize = array_key_exists('chunkSize', $options) ? intval($options['chunkSize']) : 100 * 1024 * 1024;
+        $chunkSize = array_key_exists('chunkSize', $options) ? intval($options['chunkSize']) : 10 * 1024 * 1024;
 
         $chunks = [];
         $count = 0;

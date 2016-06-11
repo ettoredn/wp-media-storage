@@ -2,6 +2,7 @@
 
 namespace WPMediaStorage;
 
+use OpenStack\ObjectStore\v1\Models\Object;
 use Symfony\Component\Finder\SplFileInfo;
 use WP_CLI;
 use WP_CLI_Command;
@@ -52,6 +53,65 @@ class Media_Storage_Command extends WP_CLI_Command
     }
 
     /**
+     * Remove objects not associated with any attachment from the store.
+     * 
+     * ## OPTIONS
+     * 
+     * [--dry]
+     * : Do not actually delete objects
+     * 
+     * @param array $assocArgs
+     */
+    public function clean(array $args, array $assocArgs)
+    {
+        global $post;
+        
+        $dry = $assocArgs['dry'] ?? false;
+
+        $q = new \WP_Query([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit,private'
+        ]);
+
+        $attachments = [];
+        while ($q->have_posts()) {
+            $q->the_post();
+
+            // Attachment name
+            $name = substr(get_attached_file($post->ID), strlen(wp_get_upload_dir()['basedir']) + 1);
+            $meta = wp_get_attachment_metadata($post->ID);
+
+            // Add attachment
+            $attachments[] = $name;
+
+            // Add attachment's thumbnail
+            if (array_key_exists('sizes', $meta) && is_array($meta['sizes'])) {
+                foreach ($meta['sizes'] as $size) {
+                    $thumbName = sprintf('%s/%s', dirname($name), $size['file']);
+                    $attachments[] = $thumbName;
+                }
+            }
+        }
+        WP_CLI::line(sprintf('Database: %d attachments found', count($attachments)));
+
+        $storeObjects = $this->storage->listObjects();
+        WP_CLI::line(sprintf('Store: %d objects found', count($storeObjects)));
+
+        // Store - database
+        $toRemove = array_diff(array_keys($storeObjects), $attachments);
+
+        // Remove objects from the store
+        foreach ($toRemove as $name) {
+            if (!$dry)
+                $this->storage->deleteObject($name);
+
+            WP_CLI::line(sprintf('Store: removed attachment %s', $name));
+        }
+
+        WP_CLI::success(sprintf('removed %d objects from the store', count($toRemove)));
+    }
+
+    /**
      * Uploads local media to the object store.
      *
      * ## OPTIONS
@@ -63,14 +123,14 @@ class Media_Storage_Command extends WP_CLI_Command
      * : Do not perform any operation on the object store.
      * 
      * [--chunk-size=<s>]
-     * : Chunk size in MiB (default 100)
+     * : Chunk size in MiB (default 10)
      *
      * @param array $args
      * @param array $assoc_args
      */
     public function upload(array $args, array $assoc_args) {
         $dry = $assoc_args['dry'] ?? false;
-        $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 100;
+        $chunkSize = array_key_exists('chunk-size', $assoc_args) ? intval($assoc_args['chunk-size']) : 10;
         $chunkSize *= 1024*1024;
 
         if (count($args) > 0) {

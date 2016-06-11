@@ -62,6 +62,10 @@ class MediaStoragePlugin
         }
 
         if ($this->getOption('rewriteUrl', false)) {
+            // TODO use wp option 'upload_url_path' ?
+            // Images get tagged with 'wp-image-<id>' class
+            // Attachments with 'wp-att-<id'> class
+            // Videos don't get tagged :(
             if (!has_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter']))
                 add_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter'], 10, 2);
 

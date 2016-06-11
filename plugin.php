@@ -10,17 +10,18 @@ Author URI: http://ettoredelnegro.me
 License: ISC
 */
 
-defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
-
 require __DIR__ . '/vendor/autoload.php';
 
 use WPMediaStorage\Media_Storage_Command;
 use WPMediaStorage\MediaStoragePlugin;
 
-$plugin = new MediaStoragePlugin();
-$plugin->registerFilters();
+add_action('init', function () {
+	$plugin = new MediaStoragePlugin();
+	$plugin->registerFilters();
+});
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once __DIR__ . '/cli/media-storage.php';
 	WP_CLI::add_command('media storage', Media_Storage_Command::class);
 } else {
 	include __DIR__ . '/settings.php';
