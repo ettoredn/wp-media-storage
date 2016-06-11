@@ -79,15 +79,15 @@ class Media_Storage_Command extends WP_CLI_Command
         while ($q->have_posts()) {
             $q->the_post();
 
-            // Attachment name
-            $name = substr(get_attached_file($post->ID), strlen(wp_get_upload_dir()['basedir']) + 1);
-            $meta = wp_get_attachment_metadata($post->ID);
-
             // Add attachment
-            $attachments[] = $name;
+            if ($pathname = get_attached_file($post->ID)) {
+                $name = substr($pathname, strlen(wp_get_upload_dir()['basedir']) + 1);
+                $attachments[] = $name;
+            }
 
             // Add attachment's thumbnail
-            if (array_key_exists('sizes', $meta) && is_array($meta['sizes'])) {
+            $meta = wp_get_attachment_metadata($post->ID);
+            if ($meta && array_key_exists('sizes', $meta) && is_array($meta['sizes'])) {
                 foreach ($meta['sizes'] as $size) {
                     $thumbName = sprintf('%s/%s', dirname($name), $size['file']);
                     $attachments[] = $thumbName;
