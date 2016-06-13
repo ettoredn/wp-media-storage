@@ -3,6 +3,9 @@
 namespace WPMediaStorage;
 
 
+use EttoreDN\PHPObjectStorage\ObjectStorage;
+use EttoreDN\PHPObjectStorage\ObjectStore\ObjectStoreInterface;
+use EttoreDN\PHPObjectStorage\ObjectStore\SwiftObjectStore;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use OpenCloud\Common\Error\BadResponseError;
@@ -13,41 +16,55 @@ class MediaStoragePlugin
     /** @var LoggerInterface */
     protected $logger;
 
-    /** @var ObjectStore */
-    protected $objectStore;
+    /** @var ObjectStoreInterface */
+    protected static $objectStore;
 
+    /**
+     * @throws \EttoreDN\PHPObjectStorage\Exception\ObjectStorageException
+     */
+    public static function getObjectStore(): ObjectStoreInterface
+    {
+        // Retrieve config and instantiace the correct class
+        $options = self::getOptions();
+
+        if (!self::$objectStore) {
+            if ($options['objectStore'] == 'openstack')
+                self::$objectStore = ObjectStorage::getInstance(SwiftObjectStore::class, $options['openstack']);
+        }
+
+        return self::$objectStore;
+    }
+
+    /**
+     * MediaStoragePlugin constructor.
+     */
     public function __construct()
     {
-        $this->logger = new Logger('media-storage');
+        $this->logger = new Logger('Media Storage');
         $this->logger->pushHandler(new ErrorLogHandler());
     }
 
-    public function getOption(string $name, string $default = '')
-    {
-        $options = get_option('mediastorage_settings');
+    public function getOption(string $name, string $default = ''): string {
+        $options = get_option('mediastorage', []);
 
         if (!array_key_exists($name, $options))
             return $default;
 
         return $options[$name];
     }
-    
-    public static function getOptions()
-    {
-        return get_option('mediastorage_settings', []);
+
+    public static function getOptions(): array {
+        $o = get_option('mediastorage', []);
+
+        if (!in_array($o['objectStore'], ['openstack']))
+            $o['objectStore'] = false;
+
+        return $o;
     }
-    
-    protected function getObjectStore()
-    {
-        if (!$this->objectStore)
-            $this->objectStore = ObjectStoreFactory::getInstance($this->logger);
-        
-        return $this->objectStore;
-    }
-    
+
     public function registerFilters()
     {
-        if ($this->getOption('store', false)) {
+        if ($this->getOption('objectStore', false)) {
             if (!has_filter('wp_handle_upload', [$this, 'uploadFilter']))
                 add_filter('wp_handle_upload', [$this, 'uploadFilter'], 10, 2);
 
@@ -61,8 +78,8 @@ class MediaStoragePlugin
                 add_filter('wp_unique_filename', [$this, 'uniqueFilenameFilter'], 10, 3);
         }
 
-        if ($this->getOption('rewriteUrl', false)) {
-            // TODO use wp option 'upload_url_path' ?
+        if ($this->getOption('rewriteAttachmentUrls', false)) {
+            // TODO use wp option 'upload_url_path' with stream wrappers ?
             // Images get tagged with 'wp-image-<id>' class
             // Attachments with 'wp-att-<id'> class
             // Videos don't get tagged :(
@@ -85,9 +102,10 @@ class MediaStoragePlugin
 
         try {
             $objectStorage = $this->getObjectStore();
-            /** @var \OpenStack\ObjectStore\v1\Models\Object $obj */
-            $obj = $objectStorage->storeObject($objectName, $objectContent);
-            $media['url'] = $obj->getPublicUri();
+            $objectStorage->upload($objectName, $objectContent);
+
+            // TODO
+            $media['url'] = 'TODO';
         } catch (BadResponseError $e) {
             $this->logger->error(sprintf('Error storing file %s: %s', $objectName, $e), [$media, $context]);
             $media['error'] = (string) $e;
@@ -114,7 +132,9 @@ class MediaStoragePlugin
         $objectStorage = $this->getObjectStore();
 
         try {
-            $url = $objectStorage->getObjectUrl($objectName);
+            // TODO
+//            $url = $objectStorage->getObjectUrl($objectName);
+            $url = 'TODO';
         } catch (BadResponseError $e) {
             $this->logger->error(sprintf('Object %s does not exist', $objectName));
         }
@@ -131,7 +151,9 @@ class MediaStoragePlugin
             $objectName = substr($source['url'], strlen($uploadsDir['baseurl']) + 1);
 
             try {
-                $url = $objectStorage->getObjectUrl($objectName);
+                // TODO
+                $url = 'TODO';
+//                $url = $objectStorage->getObjectUrl($objectName);
                 $sources[$key]['url'] = $url;
             } catch (BadResponseError $e) {
                 $this->logger->error(sprintf('Object %s does not exist', $objectName));
@@ -150,7 +172,7 @@ class MediaStoragePlugin
 
         try {
             $objectStorage = $this->getObjectStore();
-            $objectStorage->deleteObject($objectName);
+            $objectStorage->delete($objectName);
         } catch (BadResponseError $e) {
             $this->logger->error(sprintf('Unable to delete object %s: %s', $objectName, $e), [$path]);
         }
@@ -166,7 +188,7 @@ class MediaStoragePlugin
         $objectName = substr("$dir/$filename", strlen($uploadsDir['basedir']) + 1);
 
         $number = '';
-        while ($objectStorage->existsObject($objectName)) {
+        while ($objectStorage->exists($objectName)) {
             if ('' == "$number$ext") {
                 $objectName = "$objectName-" . ++$number;
             } else {

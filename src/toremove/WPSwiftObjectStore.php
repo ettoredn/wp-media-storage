@@ -14,7 +14,7 @@ use GuzzleHttp\HandlerStack;
 use Symfony\Component\Finder\SplFileInfo;
 use WP_CLI;
 
-class SwiftObjectStore implements ObjectStore
+class WPSwiftObjectStore
 {
     /**
      * @var array

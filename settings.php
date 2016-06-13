@@ -1,232 +1,137 @@
 <?php
-add_action( 'admin_menu', 'mediastorage_add_admin_menu' );
-add_action( 'admin_init', 'mediastorage_settings_init' );
 
-
-function mediastorage_add_admin_menu(  ) {
-
-    add_options_page( 'Media Storage', 'Media Storage', 'manage_options', 'media_storage', 'mediastorage_options_page' );
-
-}
-
-
-function mediastorage_settings_init(  ) {
-
-    register_setting( 'general', 'mediastorage_settings' );
-    register_setting( 'swift', 'mediastorage_settings' );
-
-    add_settings_section(
-        'mediastorage_general_section',
-        __( 'General', 'wordpress' ),
-        'mediastorage_settings_section_callback',
-        'general'
-    );
-
-    /** GENERAL **/
-    add_settings_field(
-        'store',
-        __( 'Enable object store', 'wordpress' ),
-        'general_store_render',
-        'general',
-        'mediastorage_general_section'
-    );
-    add_settings_field(
-        'rewriteUrl',
-        __( 'Enable URL rewrite', 'wordpress' ),
-        'general_rewrite_render',
-        'general',
-        'mediastorage_general_section'
-    );
-
-    function general_store_render() {
-        $options = get_option( 'mediastorage_settings' );
-        ?> <input type='checkbox' name='mediastorage_settings[store]' <?php checked( $options['store'] ?? 0, 1 ); ?> value='1'> <?php
-    }
-    function general_rewrite_render() {
-        $options = get_option( 'mediastorage_settings' );
-        ?> <input type='checkbox' name='mediastorage_settings[rewriteUrl]' <?php checked( $options['rewriteUrl'] ?? 0, 1 ); ?> value='1'> <?php
-    }
-
-
-    /** SWIFT **/
-    add_settings_section(
-        'mediastorage_swift_section',
-        __( 'OpenStack Swift', 'wordpress' ),
-        'mediastorage_settings_section_callback',
-        'swift'
-    );
-
-
-    add_settings_field(
-        'swift_username',
-        __( 'Username', 'wordpress' ),
-        'swift_username_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_password',
-        __( 'Password', 'wordpress' ),
-        'swift_password_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_tenantId',
-        __( 'Tenant Id', 'wordpress' ),
-        'swift_tenantId_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_tenantName',
-        __( 'Tenant name', 'wordpress' ),
-        'swift_tenantName_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_region',
-        __( 'Region', 'wordpress' ),
-        'swift_region_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_container',
-        __( 'Container', 'wordpress' ),
-        'swift_container_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_authUrl',
-        __( 'Auth URL', 'wordpress' ),
-        'swift_authUrl_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-    add_settings_field(
-        'swift_debugLog',
-        __( 'Debug', 'wordpress' ),
-        'swift_debugLog_render',
-        'swift',
-        'mediastorage_swift_section'
-    );
-
-}
-
-
-function swift_username_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_username]' value='<?php echo $options['swift_username']; ?>'>
-    <?php
-
-}
-
-
-function swift_password_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_password]' value='<?php echo $options['swift_password']; ?>'>
-    <?php
-
-}
-
-
-function swift_tenantId_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_tenantId]' value='<?php echo $options['swift_tenantId']; ?>'>
-    <?php
-
-}
-
-
-function swift_tenantName_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_tenantName]' value='<?php echo $options['swift_tenantName']; ?>'>
-    <?php
-
-}
-
-
-function swift_region_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_region]' value='<?php echo $options['swift_region']; ?>'>
-    <?php
-
-}
-
-
-function swift_container_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_container]' value='<?php echo $options['swift_container']; ?>'>
-    <?php
-
-}
-
-function swift_authUrl_render(  ) {
-
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='text' size="80" name='mediastorage_settings[swift_authUrl]' value='<?php echo $options['swift_authUrl']; ?>'>
-    <?php
-}
-
-function swift_debugLog_render(  )
+function value($value, $empty = '')
 {
+    if (is_bool($value))
+        return sprintf('value="%s"', $value ? 1 : 0);
 
-    $options = get_option( 'mediastorage_settings' );
-    ?>
-    <input type='checkbox' name='mediastorage_settings[swift_debugLog]' <?php checked( $options['swift_debugLog'], 1 ); ?> value='1'>
-    <?php
+    return empty($value) ? '' : sprintf('value="%s"', $value);
 }
 
+add_action('admin_init', function () {
+    // Almost useless stuff
+    register_setting('mediastorage', 'mediastorage');
 
-function mediastorage_settings_section_callback(  ) {
+    // Fetch current settings or defaults
+    $options = get_option('mediastorage', [
+        'rewriteAttachmentUrls' => false,
+        'objectStore' => 'amazon',
+        'openstack' => [
+            'enabled' => false, 'authUrl' => '', 'authVersion' => 'v2.0',
+            'username' => '', 'password' => '', 'tenantId' => '', 'tenantName' => '',
+            'region' => '', 'container' => ''
+        ]
+    ]);
+    $openstack = $options['openstack'];
 
-    echo __( 'This section description', 'wordpress' );
 
-}
+    /********* GENERAL **********/
+    $section = 'general';
+    add_settings_section("mediastorage_$section", __('General'), function () use($options) {
+        echo "<p>General description</p>";
+    }, 'mediastorage');
+
+    add_settings_field($name = 'rewriteAttachmentUrls', __('Rewrite attachment URLs'), function () use($name, $options) {
+        echo '
+            <input type="checkbox" name="mediastorage['.$name.']"'. checked($options[$name] ?? 0, 1, false) .' value="1">
+        ';
+    }, 'mediastorage', "mediastorage_$section");
+
+    add_settings_field($name = 'objectStore', __('Object store'), function () use($name, $options) {
+        echo '
+        <select name="mediastorage['.$name.']">
+            <option value="0"'. selected(false, boolval($options[$name]), false) .'>disabled</option>
+            <option value="openstack"'. selected('openstack', $options[$name], false) .'>OpenStack (Swift)</option>
+            <!--
+            <option value="s3"'. selected('s3', $options[$name], false) .'>Amazon S3</option>
+            <option value="google"'. selected('google', $options[$name], false) .'>Google Cloud Storage</option>
+            -->
+        </select>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
 
-function mediastorage_options_page(  ) {
+    /********* SWIFT **********/
+    $section = 'openstack';
+    add_settings_section("mediastorage_$section", __('OpenStack'), function () {
+        echo "<p>Swift object store</p>";
+    }, 'mediastorage');
 
-    ?>
-    <form action='options.php' method='post'>
+    add_settings_field($name = 'authUrl', __('Identity URL'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .' placeholder="https://auth.cloud.net/">
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
-        <h2>Media Storage</h2>
+    add_settings_field($name = 'authVersion', __('Identity version'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <select name="mediastorage['.$section.']['.$name.']">
+                <option value="v2.0"'. selected('v2.0', $options[$name], false) .'>v2.0</option>
+                <option value="v3.0"'. selected('v3.0', $options[$name], false) .'>v3.0</option>
+            </select>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
-        <?php
-        settings_fields('general');
-        do_settings_sections('general');
+    add_settings_field($name = 'username', __('Username'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
-        settings_fields( 'swift' );
-        do_settings_sections( 'swift' );
-        submit_button();
-        ?>
+    add_settings_field($name = 'password', __('Password'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
-    </form>
-    <?php
+    add_settings_field($name = 'tenantId', __('Tenant id'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
 
-}
+    add_settings_field($name = 'tenantName', __('Tenant name'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
+
+    add_settings_field($name = 'region', __('Region'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
+
+    add_settings_field($name = 'container', __('Container'), function () use($name, $section, $openstack) {
+        $options = $openstack;
+        echo '
+            <input size="40" name="mediastorage['.$section.']['.$name.']"'. value($options[$name]) .'>
+        ';
+    }, 'mediastorage', "mediastorage_$section");
+});
+
+add_action( 'admin_menu', function () {
+    // Page id = 'mediastorage'
+    add_options_page( 'Media Storage', 'Media Storage', 'manage_options', 'mediastorage', function () { ?>
+        <form action='options.php' method='post'>
+            <h1>Media Storage</h1>
+
+            <?php
+            do_settings_sections('mediastorage');
+
+            settings_fields('mediastorage');
+            submit_button();
+            ?>
+        </form>
+    <?php });
+});
 
 ?>
+

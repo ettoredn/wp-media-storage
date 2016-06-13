@@ -3,6 +3,7 @@
 namespace WPMediaStorage;
 
 
+use EttoreDN\PHPObjectStorage\ObjectStorage;
 use Monolog\Logger;
 use Monolog\Handler\ErrorLogHandler;
 use OpenCloud\Common\Error\BadResponseError;
@@ -48,8 +49,8 @@ class CloudImageEditorGD extends \WP_Image_Editor_GD
         $logger->debug(sprintf('Storing image editor result %s as %s', $result['path'], $objectName));
 
         try {
-            $objectStorage = ObjectStoreFactory::getInstance();
-            $objectStorage->storeObject($objectName, $objectContent);
+            $objectStorage = MediaStoragePlugin::getObjectStore();
+            $objectStorage->upload($objectName, $objectContent);
         } catch (BadResponseError $e) {
             $logger->error(sprintf('Error storing file %s: %s', $objectName, $e), [$image, $filename, $mime_type]);
             return new WP_Error('image_save_error', __('Image Editor Save Failed'));
