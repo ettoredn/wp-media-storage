@@ -9,7 +9,6 @@ use Monolog\Handler\ErrorLogHandler;
 use OpenCloud\Common\Error\BadResponseError;
 use Psr\Log\LoggerInterface;
 use WP_Error;
-use WPMediaStorage\ObjectStoreFactory;
 
 require_once ABSPATH . WPINC . '/class-wp-image-editor.php';
 require_once ABSPATH . WPINC . '/class-wp-image-editor-gd.php';

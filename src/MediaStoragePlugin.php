@@ -3,9 +3,11 @@
 namespace WPMediaStorage;
 
 
+use EttoreDN\PHPObjectStorage\Exception\ObjectStoreException;
 use EttoreDN\PHPObjectStorage\ObjectStorage;
 use EttoreDN\PHPObjectStorage\ObjectStore\ObjectStoreInterface;
 use EttoreDN\PHPObjectStorage\ObjectStore\SwiftObjectStore;
+use EttoreDN\PHPObjectStorage\StreamWrapper\SwiftStreamWrapper;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use OpenCloud\Common\Error\BadResponseError;
@@ -44,7 +46,7 @@ class MediaStoragePlugin
         $this->logger->pushHandler(new ErrorLogHandler());
     }
 
-    public function getOption(string $name, string $default = ''): string {
+    public function getOption(string $name, string $default = '') {
         $options = get_option('mediastorage', []);
 
         if (!array_key_exists($name, $options))
@@ -62,33 +64,86 @@ class MediaStoragePlugin
         return $o;
     }
 
+    public function monkeyPathHandleUpload()
+    {
+        $stupidWP = ABSPATH . '/wp-admin/includes/file.php';
+        $monkey = file_get_contents($stupidWP);
+
+        if (preg_match('/if \( \'wp_handle_upload\' === \$action \) \{/i', $monkey)) {
+            $patchedMonkey = preg_replace(
+                '/if \( \'wp_handle_upload\' === \$action \) \{/i', 
+                'if ( \'wp_handle_upload\' != $action ) {', 
+                $monkey, 
+                1
+            );
+            file_put_contents($stupidWP, $patchedMonkey);
+        }
+    }
+
     public function registerFilters()
     {
         if ($this->getOption('objectStore', false)) {
-            if (!has_filter('wp_handle_upload', [$this, 'uploadFilter']))
-                add_filter('wp_handle_upload', [$this, 'uploadFilter'], 10, 2);
+//            if (!has_filter('wp_handle_upload', [$this, 'uploadFilter']))
+//                add_filter('wp_handle_upload', [$this, 'uploadFilter'], 10, 2);
+//
+//            if (!has_filter('wp_image_editors', [$this, 'imageEditorFilter']))
+//                add_filter('wp_image_editors', [$this, 'imageEditorFilter']);
+//
+//            if (!has_filter('wp_delete_file', [$this, 'deleteFileFilter']))
+//                add_filter('wp_delete_file', [$this, 'deleteFileFilter']);
+//
+//            if (!has_filter('wp_unique_filename', [$this, 'uniqueFilenameFilter']))
+//                add_filter('wp_unique_filename', [$this, 'uniqueFilenameFilter'], 10, 3);
+            
+//            if ($this->getOption('useWrapper', false)) {
+                switch ($this->getOption('objectStore')) {
+                    case 'openstack':
+                        ObjectStorage::registerStreamWrapper(SwiftStreamWrapper::class, $this->getOption('openstack'));
+                        break;
+                }
 
-            if (!has_filter('wp_image_editors', [$this, 'imageEditorFilter']))
-                add_filter('wp_image_editors', [$this, 'imageEditorFilter']);
-
-            if (!has_filter('wp_delete_file', [$this, 'deleteFileFilter']))
-                add_filter('wp_delete_file', [$this, 'deleteFileFilter']);
-
-            if (!has_filter('wp_unique_filename', [$this, 'uniqueFilenameFilter']))
-                add_filter('wp_unique_filename', [$this, 'uniqueFilenameFilter'], 10, 3);
+                if (!has_filter('upload_dir', [$this, 'prependWrapperToUploadPath']))
+                    add_filter('upload_dir', [$this, 'prependWrapperToUploadPath']);
+//            }
         }
 
-        if ($this->getOption('rewriteAttachmentUrls', false)) {
+//        if ($this->getOption('rewriteAttachmentUrls', false)) {
             // TODO use wp option 'upload_url_path' with stream wrappers ?
             // Images get tagged with 'wp-image-<id>' class
             // Attachments with 'wp-att-<id'> class
             // Videos don't get tagged :(
-            if (!has_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter']))
-                add_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter'], 10, 2);
+//            if (!has_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter']))
+//                add_filter('wp_get_attachment_url', [$this, 'rewriteAttachmentUrlFilter'], 10, 2);
+//
+//            if (!has_filter('wp_calculate_image_srcset', [$this, 'rewriteImageSourceFilter']))
+//                add_filter('wp_calculate_image_srcset', [$this, 'rewriteImageSourceFilter'], 10, 5);
+//        }
+    }
+    
+    public function addActions()
+    {
+        if (!has_action('admin_init', [$this, 'monkeyPathHandleUpload']))
+            add_action('admin_init', [$this, 'monkeyPathHandleUpload']);
+    }
 
-            if (!has_filter('wp_calculate_image_srcset', [$this, 'rewriteImageSourceFilter']))
-                add_filter('wp_calculate_image_srcset', [$this, 'rewriteImageSourceFilter'], 10, 5);
+    public function prependWrapperToUploadPath(array $uploadPaths)
+    {
+        $store = $this->getOption('objectStore');
+        if ($store == 'openstack') {
+            // swift://<container>/<uploadPath>/<objectName>
+            //   <container> set as configured in the plugin
+            //   <uploadPath> as set by the user
+            //   <objectName> = 2016/02/foo.jpeg
+            $container = $this->getOption('openstack')['container'];
+            
+            $baseDir = preg_replace('/\/{2,}/', '/', $container .'/'. get_option('upload_path'));
+            $path =  preg_replace('/\/{2,}/', '/', $baseDir .'/'. $uploadPaths['subdir']);
+    
+            $uploadPaths['basedir'] = 'swift://' . $baseDir;
+            $uploadPaths['path'] = 'swift://' . $path;
         }
+        
+        return $uploadPaths;
     }
 
     public function uploadFilter(array $media, string $context)

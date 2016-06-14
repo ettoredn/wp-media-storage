@@ -19,6 +19,5 @@
     },
     "require-dev": {
         "wp-cli/wp-cli": "^0.23.1",
-        "php-opencloud/openstack": "^2.0"
     }
 }
