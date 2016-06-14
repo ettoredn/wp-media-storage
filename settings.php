@@ -142,51 +142,47 @@ add_action( 'admin_menu', function () {
 
             settings_fields('mediastorage');
             ?><p><?php
-            submit_button(null, 'primary', 'submit', false);
-            submit_button('Test Settings', 'secondary', 'test', false, ['style'=>'margin-left: 10px;']);
-            ?><span id="result" style="padding-left: 10px;"></span></p>
-
-            <script>
-                function updateTestButton(storeValue) {
-                    if (storeValue == '0')
-                        jQuery("input[name='test']").prop('disabled', true);
-                    else
-                        jQuery("input[name='test']").prop('disabled', false);
-                }
-                jQuery(function () {
-                    updateTestButton(jQuery("select[name='mediastorage[objectStore]").val());
-                });
-
-                jQuery("select[name='mediastorage[objectStore]").change(function (e) {
-                    updateTestButton(e.target.value);
-                });
-                jQuery("input[name='test']").click(function (e) {
-                    e.preventDefault();
-
-                    var data = jQuery("#mediastorage").serializeArray();
-                    var postData = {};
-                    data.forEach(function (o) {
-                        postData[o.name] = o.value;
-                    });
-
-                    jQuery.ajax({
-                        url: '<?php print plugins_url('plugin.php', '/wp-media-storage/plugin.php') ?>?test=1',
-                        type: 'POST',
-                        data: postData,
-                        dataType: 'json'
-                    }).done(function (data) {
-                        var response = data;
-                        jQuery('#result').html('<span style="color: #25c609;">SUCCESS: found '+ response.objectCount +' objects in the container</span>');
-                    }).fail(function (data) {
-                        var response = data.responseJSON;
-                        jQuery('#result').html('<span style="color: red">ERROR: '+ response.errors[0] +'</span>');
-                    });
-                });
-            </script>
-
+                submit_button(null, 'primary', 'submit', false);
+                submit_button('Test Settings', 'secondary', 'test', false, ['style'=>'margin-left: 10px;']);
+                ?><span id="result" style="padding-left: 10px;"></span></p>
         </form>
+
+        <script>
+            function updateTestButton(storeValue) {
+                if (storeValue == '0')
+                    jQuery("input[name='test']").prop('disabled', true);
+                else
+                    jQuery("input[name='test']").prop('disabled', false);
+            }
+            jQuery(function () {
+                updateTestButton(jQuery("select[name='mediastorage[objectStore]").val());
+            });
+
+            jQuery("select[name='mediastorage[objectStore]").change(function (e) {
+                updateTestButton(e.target.value);
+            });
+            jQuery("input[name='test']").click(function (e) {
+                e.preventDefault();
+
+                var data = jQuery("#mediastorage").serializeArray();
+                var postData = {};
+                data.forEach(function (o) {
+                    postData[o.name] = o.value;
+                });
+
+                jQuery.ajax({
+                    url: '<?php print plugins_url('plugin.php', '/wp-media-storage/plugin.php') ?>?test=1',
+                    type: 'POST',
+                    data: postData,
+                    dataType: 'json'
+                }).success(function (data) {
+                    console.log(data);
+                    jQuery('#result').html('<span style="color: #25c609;">SUCCESS: found '+ data['objectCount'] +' objects in the container</span>');
+                }).error(function (data) {
+                    console.log(data);
+                    jQuery('#result').html('<span style="color: red">ERROR: '+ data['responseText'] +'</span>');
+                });
+            });
+        </script>
     <?php });
 });
-
-?>
-

@@ -12,7 +12,6 @@ License: ISC
 
 require __DIR__ . '/vendor/autoload.php';
 
-use EttoreDN\PHPObjectStorage\Exception\ObjectStoreException;
 use EttoreDN\PHPObjectStorage\ObjectStorage;
 use WPMediaStorage\Media_Storage_Command;
 use WPMediaStorage\MediaStoragePlugin;
@@ -37,12 +36,12 @@ else if (array_key_exists('test', $_GET)) {
 	require_once( __DIR__ . '/../../../wp-load.php' );
 
 	$storeMap = [
-		'openstack' => \EttoreDN\PHPObjectStorage\ObjectStore\SwiftObjectStore::class 
+		'openstack' => \EttoreDN\PHPObjectStorage\ObjectStore\SwiftObjectStore::class
 	];
 	$options = $_POST['mediastorage'];
-	
+
 	check_admin_referer('mediastorage-options');
-	
+
 	if (array_key_exists($options['objectStore'], $storeMap)) {
 		$errors = [];
 		$objectCount = 0;

@@ -1,4 +1,4 @@
-=== Plugin Name ===
+=== Media Storage ===
 Contributors: ettoredn
 Donate link: http://example.com/
 Tags: CDN, Cloud, Media Library, Storage, Uploads, Object Storage, OpenStack, Swift, Amazon, Amazon S3, S3
@@ -20,7 +20,7 @@ The plugin has been tested only with the dirty cheap [OVH Public Cloud Object St
 
 - OpenStack's Identity API v2.0
 - PHP >= 7.0
-- monkey patching /wp-admin/files.php (because WP should be rewritten from scratch)
+- write access to /wp-admin/includes/file.php to monkey patch it (see MediaStoragePlugin.monkeyPathHandleUpload )
 
 ### Limitations
 The plugin is stil in early development and as such only supports a limited set of features (based on the author's needs). Contributions are welcome on [GitHub](https://github.com/ettoredn/wp-media-storage).
@@ -48,7 +48,7 @@ The plugin is stil in early development and as such only supports a limited set 
 
 == Frequently Asked Questions ==
 
-= Does the plugin acccess files directly from the object store?
+= Does the plugin acccess files directly from the object store? =
 
 You bet.
 
