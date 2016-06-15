@@ -64,7 +64,7 @@ class MediaStoragePlugin
         return $o;
     }
 
-    public function monkeyPathHandleUpload()
+    public function monkeyPatchHandleUpload()
     {
         $stupidWP = ABSPATH . '/wp-admin/includes/file.php';
         $monkey = file_get_contents($stupidWP);
@@ -72,8 +72,23 @@ class MediaStoragePlugin
         if (preg_match('/if \( \'wp_handle_upload\' === \$action \) \{/i', $monkey)) {
             $patchedMonkey = preg_replace(
                 '/if \( \'wp_handle_upload\' === \$action \) \{/i', 
-                'if ( \'wp_handle_upload\' != $action ) {', 
+                'if ( \'wp_handle_upload\' !== $action ) {', 
                 $monkey, 
+                1
+            );
+            file_put_contents($stupidWP, $patchedMonkey);
+        }
+    }
+    public function monkeyUnpatchHandleUpload()
+    {
+        $stupidWP = ABSPATH . '/wp-admin/includes/file.php';
+        $monkey = file_get_contents($stupidWP);
+        
+        if (preg_match('/if \( \'wp_handle_upload\' !== \$action \) \{/i', $monkey)) {
+            $patchedMonkey = preg_replace(
+                '/if \( \'wp_handle_upload\' !== \$action \) \{/i',
+                'if ( \'wp_handle_upload\' === $action ) {',
+                $monkey,
                 1
             );
             file_put_contents($stupidWP, $patchedMonkey);
@@ -122,7 +137,7 @@ class MediaStoragePlugin
     
     public function addActions()
     {
-        if (!has_action('admin_init', [$this, 'monkeyPathHandleUpload']))
+        if (!has_action('admin_init', [$this, 'monkeyPatchHandleUpload']))
             add_action('admin_init', [$this, 'monkeyPathHandleUpload']);
     }
 
@@ -252,4 +267,5 @@ class MediaStoragePlugin
         }
         return wp_basename("/$objectName");
     }
+
 }

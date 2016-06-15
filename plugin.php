@@ -17,10 +17,18 @@ use WPMediaStorage\Media_Storage_Command;
 use WPMediaStorage\MediaStoragePlugin;
 
 if (defined('ABSPATH')) {
-	add_action('init', function () {
-		$plugin = new MediaStoragePlugin();
+	$plugin = new MediaStoragePlugin();
+	
+	add_action('init', function () use ($plugin) {
 		$plugin->registerFilters();
-		$plugin->monkeyPathHandleUpload();
+		$plugin->monkeyPatchHandleUpload();
+	});
+
+	register_activation_hook(__FILE__, function () use ($plugin) {
+		$plugin->monkeyPatchHandleUpload();
+	});
+	register_deactivation_hook(__FILE__, function () use ($plugin) {
+		$plugin->monkeyUnpatchHandleUpload();
 	});
 
 	include __DIR__ . '/settings.php';
