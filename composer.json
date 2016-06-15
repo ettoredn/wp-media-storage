@@ -3,7 +3,8 @@
     "description": "Offload media to cloud object storages",
     "require": {
         "monolog/monolog": "^1.19",
-        "ettoredn/php-object-storage": "dev-master"
+        "ettoredn/php-object-storage": "dev-master",
+        "guzzlehttp/guzzle": "^6.2"
     },
     "license": "GPL-2.0",
     "authors": [
