@@ -5,7 +5,7 @@ Tags: CDN, Cloud, Media Library, Storage, Uploads, Object Storage, OpenStack, Sw
 Requires at least: 4.4
 Tested up to: 4.5.2
 Stable tag: trunk
-License: GPLv2 or later
+License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Directly access and store Media Library files on cloud Object Stores.
@@ -41,18 +41,18 @@ The plugin is stil in early development and as such only supports a limited set 
 1. Install via the WordPress dashboard or visit [GitHub](https://github.com/ettoredn/wp-media-storage) for the [Composer](https://getcomposer.org/) version.
 2. Go to 'Settings' > 'Media Storage'
 2. Select 'OpenStack (Swift)'
-2. Fill OpenStack credentials undert 'Settings' > 'Media Storage'
+2. Fill OpenStack credentials under 'Settings' > 'Media Storage'
 3. Set the public URL pointing to the root of your Swift container. It will be used for new posts and pages.
 4. Check credentials by clicking on 'Test Settings'
 5. 'Save Changes'
 
 == Frequently Asked Questions ==
 
-= Does the plugin acccess files directly from the object store? =
+= Does the plugin access files directly from the object store? =
 
 You bet.
 
-= Why after activating the pluging my uploads are slower? =
+= Why after activating the plugin my uploads are slower? =
 
 Because there is a lot of overhead involved in directly accessing the data on the object store versus local file system.
 However, performance should mostly be bound to the network/storage speed of your object store.
@@ -63,10 +63,10 @@ However, performance should mostly be bound to the network/storage speed of your
 
 == Changelog ==
 
-= 0.1 =
+= 1.0 =
 * Support OpenStack's Swift
 
 == Upgrade Notice ==
 
-= 0.1 =
+= 1.0 =
 None

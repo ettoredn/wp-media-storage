@@ -3,11 +3,11 @@
 /*
 Plugin Name: Media Storage
 Plugin URI: https://github.com/ettoredn/wp-media-storage
-Description: Store media files on cloud object stores.
+Description: Store media on cloud object stores.
 Version: 1.0
 Author: Ettore Del Negro
 Author URI: http://ettoredelnegro.me
-License: ISC
+License: GPLv2
 */
 
 require __DIR__ . '/vendor/autoload.php';
