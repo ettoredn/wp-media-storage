@@ -3,7 +3,7 @@
 /*
 Plugin Name: Media Storage
 Plugin URI: https://github.com/ettoredn/wp-media-storage
-Description: Store media on cloud object stores.
+Description: Store and access store media on cloud object stores.
 Version: 1.0
 Author: Ettore Del Negro
 Author URI: http://ettoredelnegro.me
